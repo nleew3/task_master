@@ -1,0 +1,19 @@
+{
+  "users": {
+    "person1": {
+      "displayName": "Person 1",
+      "email": "persin1@email.com",
+      "imageUrl": "https://toImage"
+    },
+    "person2": {
+      "displayName": "Person 2",
+      "email": "persin2@email.com",
+      "imageUrl": "https://toImage"
+    },
+    "person3": {
+      "displayName": "Person 3",
+      "email": "persin3@email.com",
+      "imageUrl": "https://toImage"
+    }
+  }
+}
