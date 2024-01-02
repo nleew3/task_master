@@ -73,10 +73,10 @@ class BoardManager extends StatefulWidget {
   final Function(String id, String title)? onTitleChange;
 
   /// Map of BoardData
-  final Map<String, BoardData> boardData;
+  final Map<String, BoardData?> boardData;
 
   /// Map of CardData
-  final Map<String, CardData> cards;
+  final Map<String, CardData?> cards;
 
   /// Width of the Manager
   final double? width;
@@ -209,8 +209,8 @@ class _BoardManagerState extends State<BoardManager> {
         ? MediaQuery.of(context).size.width
         : widget.width!;
     boardWidth = widget.boardWidth;
-    cardData = widget.cards.entries.map((e) => e.value).toList();
-    boardData = widget.boardData.entries.map((e) => e.value).toList();
+    cardData = widget.cards.entries.map((e)=>e.value).whereType<CardData>().toList();
+    boardData = widget.boardData.entries.map((e) => e.value).whereType<BoardData>().toList();
     assignDropDown = setDropDownItems(widget.users);
     editorDropDown = setDropDownItems(widget.users);
     priDropDown = setDropDownItems([
@@ -2154,8 +2154,7 @@ class _BoardManagerState extends State<BoardManager> {
                             if (boardNameController.text != '') {
                               if (!updateBoard) {
                                 if (widget.onSubmit != null) {
-                                  widget.onSubmit!(boardNameController.text,
-                                      boardData.length, allowNofifying);
+                                  widget.onSubmit!(boardNameController.text,boardData.length, allowNofifying,);
                                 }
                               } else {
                                 dynamic data = {

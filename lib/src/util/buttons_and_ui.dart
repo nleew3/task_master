@@ -201,22 +201,34 @@ class TaskMasterFloatingActionButton extends StatelessWidget {
     if (alignment == Alignment.bottomRight) {
       bottom = offset.dy;
       right = offset.dx;
+
+      left = null;
+      top = null;
     } else if (alignment == Alignment.bottomLeft) {
       bottom = offset.dy;
       left = offset.dx;
+
+      right = null;
+      top = null;
     } else if (alignment == Alignment.topRight) {
       top = offset.dy;
       right = offset.dx;
+
+      bottom = null;
+      left = null;
     } else if (alignment == Alignment.topLeft) {
       top = offset.dy;
       left = offset.dx;
+
+      bottom = null;
+      right = null;
     }
   }
 
-  late final double left;
-  late final double top; 
-  late final double right;
-  late final double bottom;
+  late final double? left;
+  late final double? top; 
+  late final double? right;
+  late final double? bottom;
   final bool allowed;
   final Function()? onTap;
   final Color color;

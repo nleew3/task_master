@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'database.dart';
 import 'package:task_master/task_master.dart';
-import 'package:intl/intl.dart';
 
 class ProjectViewer extends StatefulWidget {
   const ProjectViewer({
@@ -34,7 +32,7 @@ class _ProjectViewerState extends State<ProjectViewer> {
   @override
   void initState() {
     start();
-    listenToFirebase();
+    getData();
     super.initState();
   }
 
@@ -47,21 +45,15 @@ class _ProjectViewerState extends State<ProjectViewer> {
   void start() {
     currentEpic = widget.epic;
     managemntData = {};
-    child = 'Epic/$currentEpic';
+    child = 'department/$currentEpic';
     labelData = widget.labels;
   }
 
   // Listener to montior changes in database and update/reset application accordingly
-  void listenToFirebase() async {
+  void getData() async {
     Database.once('complete/$currentEpic').then((value) {
       setState(() {
         completedData = value ?? {};
-      });
-    });
-
-    completeAdded = Database.onValue('complete/$currentEpic').listen((event) {
-      setState(() {
-        completedData = event.snapshot.value ?? {};
       });
     });
 
@@ -70,28 +62,6 @@ class _ProjectViewerState extends State<ProjectViewer> {
         managemntData = value ?? {};
       });
     });
-
-    fbadded = Database.onValue(child).listen((event) {
-      setState(() {
-        managemntData = event.snapshot.value ?? {};
-      });
-    });
-
-    try {
-      DatabaseReference cardRef = Database.reference('Label/$currentEpic');
-      labelAdded = cardRef.onChildAdded.listen((event) {
-        updateFunctions(event);
-      });
-      labelChanged = cardRef.onChildChanged.listen((event) {
-        updateFunctions(event);
-      });
-      labelRemoved = cardRef.onChildRemoved.listen((event) {
-        setState(() {
-          labelData[event.snapshot.key] = null;
-          labelData = removeNull(labelData);
-        });
-      });
-    } catch (e) {}
   }
 
   // Updates data based on event received
@@ -124,7 +94,7 @@ class _ProjectViewerState extends State<ProjectViewer> {
   @override
   Widget build(BuildContext context) {
     return ProjectManager(
-      labels: labelData == null ? null : labelData,
+      labels: labelData,
       height: widget.height,
       width: widget.width,
       projectData: projectData(),
@@ -137,63 +107,49 @@ class _ProjectViewerState extends State<ProjectViewer> {
         }
       },
       onSubmitLabel: (data) {
-        Database.push(children: 'Label/${widget.epic}', data: data);
+        String location = DateTime.now().microsecondsSinceEpoch.toString();
+        labelData[currentEpic][location] = data;
+        setState(() {});
       },
       onUpdateLabel: (data, location) {
-        Database.update(
-            children: 'Label/${widget.epic}', location: location, data: data);
+        labelData[currentEpic][location] = data;
+        setState(() {});
       },
       onDeleteLabel: (location) {
-        Database.update(
-            children: 'Label/$currentEpic', location: location, data: {});
+        labelData[currentEpic][location] = null;
+        setState(() {});
       },
       onSubmit: (title, image, date, color) async {
-        DateFormat dayFormatter = DateFormat('y-MM-dd hh:mm:ss');
-        String createdDate =
-            dayFormatter.format(DateTime.now()).replaceAll(' ', 'T');
-
-        Database.push(children: '$child/', data: {
+        managemntData[DateTime.now().millisecondsSinceEpoch.toString()] = {
           'department': currentEpic,
           'createdBy': "example",
-          'dateCreated': createdDate,
+          'dateCreated': DateTime.now().toString(),
           'dueDate': (date != '') ? date : null,
           'title': title,
           'image': (image == ' ') ? 'temp' : image,
           'color': color,
-        });
+        };
+        setState(() {});
       },
       onUpdate: (title, image, date, color, project) async {
-        Database.update(
-            children: '$child/',
-            data: {
-              'boards': managemntData[project]['boards'],
-              'cards': managemntData[project]['cards'],
-              'department': currentEpic,
-              'completed': managemntData[project]['completed'],
-              'createdBy': managemntData[project]['createdBy'],
-              'dateCreated': managemntData[project]['dateCreated'],
-              'dueDate': (date != '') ? date : null,
-              'title': title,
-              'image': (image == ' ') ? 'temp' : image,
-              'color': color,
-            },
-            location: project);
+        managemntData[project]['dueDate'] = (date != '') ? date : null;
+        managemntData[project]['title'] = title;
+        managemntData[project]['image'] = (image == ' ') ? 'temp' : image;
+        managemntData[project]['color'] = color;
+        setState(() {});
       },
       onComplete: (project) async {
-        DateFormat dayFormatter = DateFormat('y-MM-dd hh:mm:ss');
-        String createdDate =
-            dayFormatter.format(DateTime.now()).replaceAll(' ', 'T');
-
-        Database.update(
-            children: '$child/$project/',
-            location: 'completed',
-            data: {
-              'department': "example user",
-              'date': createdDate,
-            });
+        completedData[project] = {
+          "completedDate": DateTime.now().toString(),
+          "createdBy": managemntData[project]['createdBy'],
+          "dueDate": managemntData[project]['dueDate'],
+          "title": managemntData[project]['title']
+        };
+        setState(() {});
       },
       onProjectDelete: (id) {
-        Database.update(children: '$child/', location: id, data: {});
+        managemntData[id] = null;
+        setState(() {});
       },
     );
   }

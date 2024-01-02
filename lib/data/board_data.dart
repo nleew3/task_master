@@ -32,14 +32,15 @@ class BoardData {
 
   /// Convert JSON data string to boardData object
   factory BoardData.fromJSON(Map<String, dynamic> data, key, int color) {
+    print(data);
     return BoardData(
-      title: data['title'] as String,
-      dateCreated: data['dateCreated'] as String,
-      createdBy: data['createdBy'] as String,
+      title: data['title'] ?? '',
+      dateCreated: data['dateCreated'] ?? '',
+      createdBy: data['createdBy'] ?? '',
       id: key,
       priority: data['priority'] as int?,
       color: color,
-      notify: data['notify'] as bool
+      notify: data['notify'] ?? false
     );
   }
 

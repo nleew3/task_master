@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:task_master/task_master.dart';
 import 'database.dart';
@@ -35,8 +34,8 @@ class _BoardViewerState extends State<BoardViewer> {
   String child = '';
   String selectedProject = '';
   String currentEpic = '';
-  Map<String, BoardData> currentBoardData = {};
-  Map<String, CardData> currentCardData = {};
+  Map<String, BoardData?> currentBoardData = {};
+  Map<String, CardData?> currentCardData = {};
   dynamic labelsData;
   double startingWidth = 0;
 
@@ -61,7 +60,6 @@ class _BoardViewerState extends State<BoardViewer> {
 
   // Initialize variables and start listeners
   void start() async {
-    firebaseReset();
     completedTasks = widget.completedData;
     selectedProject = widget.project;
     currentEpic = widget.epic;
@@ -92,65 +90,7 @@ class _BoardViewerState extends State<BoardViewer> {
       points = value;
     });
 
-    listenToFirebase();
     setState(() {});
-  }
-
-  // Closes listeners and resets data
-  void firebaseReset() {
-    currentBoardData = {};
-    currentCardData = {};
-    hasStarted = false;
-    labelsData = null;
-    showChart = false;
-
-    completedTasks = null;
-    points = null;
-    update = true;
-  }
-
-  // Listener to montior changes in database and update/reset application accordingly
-  void listenToFirebase() {
-    boardAdded = Database.onValue('$child/boards').listen((event) {
-      setState(() {
-        currentBoardData = boardData(event.snapshot.value);
-        update = true;
-      });
-    });
-    cardAdded = Database.onValue('$child/cards').listen((event) {
-      setState(() {
-        currentCardData = cardData(event.snapshot.value);
-        update = true;
-      });
-    });
-
-    try {
-      DatabaseReference cardRef = Database.reference('Label/$currentEpic');
-      labelAdded = cardRef.onChildAdded.listen((event) {
-        updateFunction(event);
-      });
-      labelChanged = cardRef.onChildChanged.listen((event) {
-        updateFunction(event);
-      });
-      labelRemoved = cardRef.onChildRemoved.listen((event) {
-        setState(() {
-          labelsData[event.snapshot.key] = null;
-          labelsData = removeNull(labelsData);
-        });
-      });
-    } catch (e) {}
-  }
-
-  // Updates data based on event received
-  void updateFunction(event) {
-    dynamic temp = event.snapshot.value;
-    setState(() {
-      if (labelsData == null) {
-        labelsData = {event.snapshot.key: temp};
-      } else {
-        labelsData[event.snapshot.key] = temp;
-      }
-    });
   }
 
   void callback() {
@@ -167,13 +107,13 @@ class _BoardViewerState extends State<BoardViewer> {
 
     dropDownNames.add(DropDownItems(
         value: widget.currentUID,
-        text: widget.users[widget.currentUID]['displayName']));
+        text: widget.users[widget.currentUID]?['displayName'] ?? ''));
 
     for (String uid in widget.users.keys) {
       if (uid == dropDownNames[1].value) continue;
 
       dropDownNames.add(
-          DropDownItems(value: uid, text: widget.users[uid]['displayName']));
+          DropDownItems(value: uid, text: widget.users[uid]?['displayName'] ?? ''));
     }
 
     return dropDownNames;
@@ -198,7 +138,7 @@ class _BoardViewerState extends State<BoardViewer> {
       for (String key in projectCardData.keys) {
         Map<String, dynamic>? labels;
         if (labelsData != null &&
-            projectCardData[key]['data']['labels'] != null) {
+            projectCardData[key]['data']?['labels'] != null) {
           for (int i = 0;
               i <= projectCardData[key]['data']['labels'].length - 1;
               i++) {
@@ -217,10 +157,10 @@ class _BoardViewerState extends State<BoardViewer> {
         }
 
         List<String> assigned = [];
-        if (projectCardData[key]['data']['assign'] != null) {
+        if (projectCardData[key]['data']?['assign'] != null) {
           assigned.add(projectCardData[key]['data']['assign']);
         }
-        if (projectCardData[key]['data']['assigned'] != null) {
+        if (projectCardData[key]['data']?['assigned'] != null) {
           for (int i = 0;
               i < projectCardData[key]['data']['assigned'].length;
               i++) {
@@ -229,7 +169,7 @@ class _BoardViewerState extends State<BoardViewer> {
         }
 
         List<String> editors = [];
-        if (projectCardData[key]['data']['editors'] != null) {
+        if (projectCardData[key]['data']?['editors'] != null) {
           for (int i = 0;
               i < projectCardData[key]['data']['editors'].length;
               i++) {
@@ -240,21 +180,19 @@ class _BoardViewerState extends State<BoardViewer> {
         // Formats data to be sent to database
         data[key] = CardData(
             id: key,
-            title: projectCardData[key]['data']['title'],
-            createdBy: projectCardData[key]['data']['createdBy'],
-            dateCreated: projectCardData[key]['data']['createdDate'],
+            title: projectCardData[key]['data']?['title'],
+            createdBy: projectCardData[key]['data']?['createdBy'],
+            dateCreated: projectCardData[key]['data']?['createdDate'],
             priority: projectCardData[key]['priority'],
-            description: (projectCardData[key]['data']['description'] == null)
-                ? ''
-                : projectCardData[key]['data']['description'],
-            dueDate: projectCardData[key]['data']['dueDate'],
+            description: projectCardData[key]['data']?['description']  ?? '',
+            dueDate: projectCardData[key]['data']?['dueDate'],
             points: projectCardData[key]['data']?['points'] ?? 0,
             assigned: assigned,
             editors: editors,
-            checkList: projectCardData[key]['data']['subTasks'],
-            comments: projectCardData[key]['data']['comments'],
+            checkList: projectCardData[key]['data']?['subTasks'],
+            comments: projectCardData[key]['data']?['comments'],
             boardId: projectCardData[key]['board'],
-            level: projectCardData[key]['data']['priority'],
+            level: projectCardData[key]['data']?['priority'],
             labels: labels);
       }
     }
@@ -638,68 +576,33 @@ class _BoardViewerState extends State<BoardViewer> {
                           if (name[i] != widget.currentUID) {
                             pushTo.add(name[i]);
                           }
-                          Database.update(
-                              children:
-                                  'points/$currentEpic/${name[i]}/$selectedProject',
-                              location: id,
-                              data: pointData);
+                          pointData[currentEpic][name[i]][selectedProject][id] = pointData;
                         }
-                        Database.update(
-                                children:
-                                    'complete/$currentEpic/$selectedProject',
-                                location: id,
-                                data: archiveData)
-                            .then((value) {
-                          Database.update(
-                              children: '$child/cards/',
-                              location: id,
-                              data: {});
-                        });
+                        completedTasks[currentEpic][selectedProject][id] = archiveData;
+                        currentCardData[id] = null;
                       } else {
-                        Database.update(
-                                children:
-                                    'complete/$currentEpic/$selectedProject',
-                                location: id,
-                                data: archiveData)
-                            .then((value) {
-                          Database.update(
-                              children: '$child/cards/',
-                              location: id,
-                              data: {});
-                        });
+                        completedTasks[currentEpic][selectedProject][id] = archiveData;
+                        currentCardData[id] = null;
                       }
                     },
                     screenOffset: const Offset(180, 0),
                     onPriorityBoardChange: (pri) {
                       for (String key in pri.keys) {
-                        Database.update(
-                            children: '$child/boards/',
-                            location: key,
-                            data: {
-                              'createdBy': currentBoardData[key]!.createdBy,
-                              'dateCreated': currentBoardData[key]!.dateCreated,
-                              'title': currentBoardData[key]!.title,
-                              'priority': pri[key],
-                              'notify': currentBoardData[key]!.notify
-                            });
+                        currentBoardData[key]!.priority = pri[key];
                       }
 
                       setState(() {});
                     },
                     onSubmit: (title, priority, notify) async {
-                      DateFormat dayFormatter = DateFormat('y-MM-dd hh:mm:ss');
-                      String date = dayFormatter
-                          .format(DateTime.now())
-                          .replaceAll(' ', 'T');
-
-                      Database.push(children: '$child/boards', data: {
-                        'createdBy': widget.currentUID,
-                        'dateCreated': date,
-                        'title': title,
-                        'priority': priority,
-                        'notify': notify
-                      });
-
+                      // currentBoardData[DateTime.now().millisecondsSinceEpoch.toString()] = BoardData(
+                      //   title: title, 
+                      //   dateCreated: DateTime.now().toString(), 
+                      //   createdBy: widget.currentUID, 
+                      //   id: id,
+                      //   color: color,
+                      //   priority: priority,
+                      //   notify: notify
+                      // );
                       setState(() {});
                     },
                     onCreateCard: (data) {
@@ -713,8 +616,9 @@ class _BoardViewerState extends State<BoardViewer> {
                             sendTo.add(data['data']['assigned'][i]);
                           }
                         }
-
-                        Database.push(children: '$child/cards', data: data);
+                        //currentCardData[DateTime.now().millisecondsSinceEpoch.toString()] = ;
+                        setState((){});
+                        //Database.push(children: '$child/cards', data: data);
                       }
                     },
                     onEditCard: (data, cardLoc) {
@@ -751,14 +655,15 @@ class _BoardViewerState extends State<BoardViewer> {
                         }
                       }
 
-                      Database.update(
-                          children: '$child/cards/$cardLoc',
-                          location: 'data',
-                          data: data);
+                      // Database.update(
+                      //     children: '$child/cards/$cardLoc',
+                      //     location: 'data',
+                      //     data: data);
+                      setState(() {});
                     },
                     onCardDelete: (id) {
-                      Database.update(
-                          children: '$child/cards', location: id, data: {});
+                      currentCardData[id] = null;
+                      setState(() {});
                     },
                     onCardPriorityChange: (val, change) {
                       for (String j in currentCardData.keys) {
@@ -778,35 +683,35 @@ class _BoardViewerState extends State<BoardViewer> {
                           }
                         }
                       }
-                      for (String key in val.keys) {
-                        CardData currentCard = currentCardData[key]!;
-
-                        Database.update(
-                            children: '$child/cards',
-                            location: key,
-                            data: {
-                              "board": val[key]['boardId'],
-                              "priority": val[key]['priority'],
-                              "data": {
-                                "assigned": currentCard.assigned,
-                                "createdBy": currentCard.createdBy,
-                                "createdDate": currentCard.dateCreated,
-                                "editors": currentCard.editors,
-                                "points": currentCard.points,
-                                "title": currentCard.title,
-                                "labels": currentCard.labels?.keys.toList(),
-                                "subTasks": currentCard.checkList,
-                                "comments": currentCard.comments,
-                                "description": currentCard.description,
-                                "priority": currentCard.level,
-                                "dueDate": currentCard.dueDate
-                              }
-                            });
-                      }
+                      // for (String key in val.keys) {
+                      //   CardData currentCard = currentCardData[key]!;
+                        
+                      //   Database.update(
+                      //       children: '$child/cards',
+                      //       location: key,
+                      //       data: {
+                      //         "board": val[key]['boardId'],
+                      //         "priority": val[key]['priority'],
+                      //         "data": {
+                      //           "assigned": currentCard.assigned,
+                      //           "createdBy": currentCard.createdBy,
+                      //           "createdDate": currentCard.dateCreated,
+                      //           "editors": currentCard.editors,
+                      //           "points": currentCard.points,
+                      //           "title": currentCard.title,
+                      //           "labels": currentCard.labels?.keys.toList(),
+                      //           "subTasks": currentCard.checkList,
+                      //           "comments": currentCard.comments,
+                      //           "description": currentCard.description,
+                      //           "priority": currentCard.level,
+                      //           "dueDate": currentCard.dueDate
+                      //         }
+                      //       });
+                      // }
                     },
                     onBoardDelete: (id) {
-                      Database.update(
-                          children: '$child/boards', location: id, data: {});
+                      currentBoardData[id] = null;
+                      setState(() {});
                     },
                     height: widget.height,
                     width: showChart ? widget.width - 180 : widget.width,
@@ -818,12 +723,10 @@ class _BoardViewerState extends State<BoardViewer> {
                     cards: currentCardData,
                     users: createDropDown(),
                     usersProfiles: widget.users,
-                    currentUser:
-                        UserData.fromJSON(widget.users[widget.currentUID])),
+                    currentUser:UserData.fromJSON(widget.users[widget.currentUID])),
                 selectedProject == ''
                     ? Container()
-                    : Align(
-                        alignment: Alignment.centerRight, child: chartInfo())
+                    : Align(alignment: Alignment.centerRight, child: chartInfo())
               ],
             ),
           )

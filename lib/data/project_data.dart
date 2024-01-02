@@ -33,11 +33,11 @@ class ProjectData {
   /// Used to convert JSON data to ProjectData object
   factory ProjectData.fromJSON(Map<String, dynamic> data, String key) {
     return ProjectData(
-      color: data['color'] as int,
+      color: data['color'] ?? 0,
       id: key,
-      title: data['title'] as String,
-      dateCreated: data['dateCreated'] as String,
-      createdBy: data['createdBy'] as String,
+      title: data['title'] ?? '',
+      dateCreated: data['dateCreated'] ?? '',
+      createdBy: data['createdBy'] ?? '',
       department: data['department'] as String?,
       dueDate: data['dueDate'] as String?
     );

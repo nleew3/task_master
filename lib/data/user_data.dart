@@ -21,8 +21,8 @@ class UserData {
   /// Used to convert JSON data to UserData object
   factory UserData.fromJSON(Map<String, dynamic> data) {
     return UserData(
-      uid: data['uid'] as String,
-      displayName: data['displayName'] as String,
+      uid: data['uid'] ?? '',
+      displayName: data['displayName'] ?? '',
       imageUrl: data['imageURL'] as String?,
       credentials: data['credentials'] as String?
     );
