@@ -19,7 +19,7 @@ dependencies:
     path: ../
   css:
     git:
-      url: https://github.com/Knightro63/css.git
+      url: https://github.com/LimbitlessSolutionsInc/css.git
 
 dev_dependencies:
   flutter_test:

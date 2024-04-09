@@ -233,47 +233,54 @@ class CreateTaskCard extends StatelessWidget {
                     offset: const Offset(2, 2),
                   ),
                 ]),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: cardLabels(),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Padding(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, 
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: cardLabels(),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
                       padding: const EdgeInsets.only(left: 15),
                       child: SizedBox(
-                          width: width - 70,
-                          child: RichText(
-                              overflow: TextOverflow.ellipsis,
-                              text: TextSpan(
-                                text: cardData.title,
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .primaryTextTheme
-                                        .subtitle1!
-                                        .color,
-                                    fontSize: 12,
-                                    fontFamily: 'Klavika Bold',
-                                    package: 'css',
-                                    decoration: TextDecoration.none),
-                              )))),
-                  Text(
-                    (cardData.points == 0) ? '' : cardData.points.toString(),
-                    style: TextStyle(
-                        color:
-                            Theme.of(context).primaryTextTheme.subtitle1!.color,
-                        fontSize: 12,
-                        fontFamily: 'Klavika Bold',
-                        package: 'css',
-                        decoration: TextDecoration.none),
-                  )
-                ],
-              ),
-              cardNames(),
-              cardNotifications()
-            ])));
+                        width: width - 70,
+                        child: RichText(
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            text: cardData.title,
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .primaryTextTheme
+                                  .subtitle1!
+                                  .color,
+                              fontSize: 12,
+                              fontFamily: 'Klavika Bold',
+                              package: 'css',
+                              decoration: TextDecoration.none
+                            ),
+                          )
+                        )
+                      )
+                    ),
+                    Text(
+                      (cardData.points == 0) ? '' : cardData.points.toString(),
+                      style: TextStyle(
+                          color:
+                              Theme.of(context).primaryTextTheme.subtitle1!.color,
+                          fontSize: 12,
+                          fontFamily: 'Klavika Bold',
+                          package: 'css',
+                          decoration: TextDecoration.none),
+                    )
+                  ],
+                ),
+                cardNames(),
+                cardNotifications()
+              ]
+            )
+          ));
   }
 }
